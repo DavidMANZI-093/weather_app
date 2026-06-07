@@ -1,6 +1,6 @@
 # Skies — Weather Information System
 
-A Flask + SQLite weather app for the UNILAK HCI CAT assessment.
+A Flask + SQLite weather python app for our HCI Course CAT.
 
 ## Setup
 
@@ -16,7 +16,7 @@ Export your OpenWeatherMap API key before starting:
 export OPENWEATHER_API_KEY="your_key_here"
 ```
 
-Get a free key at https://openweathermap.org/api
+Get a free key at <https://openweathermap.org/api>
 
 ## Run
 
@@ -24,7 +24,7 @@ Get a free key at https://openweathermap.org/api
 python app.py
 ```
 
-Then open http://localhost:5000
+Then open <http://localhost:5000>
 
 ## Default admin credentials
 

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+    <header class="admin-header">
+        <div>
+            <h2 class="admin-title">Dashboard</h2>
+            <p class="admin-subtitle">Signed in as <strong>{{ session.admin_name }}</strong></p>
+        </div>
+        <nav class="admin-tabs">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-tab active">Overview</a>
+            <a href="{{ url_for('admin_searches') }}"  class="admin-tab">Search history</a>
+        </nav>
+    </header>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-card-label">Total searches</span>
+            <span class="stat-card-value">{{ stats.total_searches }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card-label">Today</span>
+            <span class="stat-card-value">{{ stats.today_searches }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card-label">Unique visitors</span>
+            <span class="stat-card-value">{{ stats.unique_visitors }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card-label">By city name</span>
+            <span class="stat-card-value">{{ stats.city_searches }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card-label">By coordinates</span>
+            <span class="stat-card-value">{{ stats.coord_searches }}</span>
+        </div>
+    </div>
+
+    <div class="admin-grid">
+
+        <!-- Activity chart -->
+        <section class="admin-section admin-section--wide">
+            <h3 class="section-title">Activity — last 14 days</h3>
+            <div class="chart-wrap">
+                <canvas id="activityChart" height="140"></canvas>
+            </div>
+        </section>
+
+        <!-- Top cities -->
+        <section class="admin-section">
+            <h3 class="section-title">Top locations</h3>
+            {% if top_cities %}
+            <ol class="top-list">
+                {% for city in top_cities %}
+                <li class="top-list-item">
+                    <span class="top-name">{{ city.city_name }}{% if city.country %}, {{ city.country }}{% endif %}</span>
+                    <span class="top-count">{{ city.count }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+            {% else %}
+            <p class="empty-note">No searches yet.</p>
+            {% endif %}
+        </section>
+
+    </div>
+
+    <!-- Recent searches -->
+    <section class="admin-section admin-section--wide">
+        <div class="section-header">
+            <h3 class="section-title">Recent searches</h3>
+            <a href="{{ url_for('admin_searches') }}" class="link-more">View all</a>
+        </div>
+        {% if recent %}
+        <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Method</th>
+                    <th>Temp</th>
+                    <th>Condition</th>
+                    <th>Searched</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in recent[:10] %}
+                <tr>
+                    <td>{{ row.city_name or row.query_input }}{% if row.country %}, {{ row.country }}{% endif %}</td>
+                    <td class="muted" style="text-transform: uppercase; font-size: 0.85em; font-weight: 600;">{{ 'CITY' if row.query_type == 'city' else 'CRDS' }}</td>
+                    <td>{{ row.temperature }}&deg;C</td>
+                    <td>{{ row.condition }}</td>
+                    <td class="time-cell">{{ row.searched_at[:16] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="empty-note">No searches recorded yet.</p>
+        {% endif %}
+    </section>
+
+    <!-- Account Settings -->
+    <div class="admin-grid">
+        <!-- Change username -->
+        <section class="admin-section">
+            <h3 class="section-title">Change username</h3>
+            <div class="account-form-wrap" style="max-width: 100%">
+                <form method="POST" action="{{ url_for('change_username') }}" class="password-form" novalidate>
+                    <div class="input-group">
+                        <label for="new_username" class="input-label">New username</label>
+                        <input id="new_username" name="new_username" type="text" class="text-input" value="{{ session.admin_name }}" required minlength="3">
+                    </div>
+                    <button type="submit" class="btn btn--primary">Update username</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Change password -->
+        <section class="admin-section">
+            <h3 class="section-title">Change password</h3>
+            <div class="account-form-wrap" style="max-width: 100%">
+                <form method="POST" action="{{ url_for('change_password') }}" class="password-form" novalidate>
+                    <div class="input-group">
+                        <label for="current_password" class="input-label">Current password</label>
+                        <input id="current_password" name="current_password" type="password" class="text-input" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="new_password" class="input-label">New password</label>
+                        <input id="new_password" name="new_password" type="password" class="text-input" minlength="6" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirm_password" class="input-label">Confirm new password</label>
+                        <input id="confirm_password" name="confirm_password" type="password" class="text-input" required>
+                    </div>
+                    <button type="submit" class="btn btn--primary">Update password</button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function() {
+    const trend = {{ daily_trend | tojson }};
+
+    // Fill in missing days so chart has all 14 slots
+    const today = new Date();
+    const days  = [];
+    const counts = [];
+    for (let i = 13; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        days.push(d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }));
+        const found = trend.find(t => t.day === key);
+        counts.push(found ? found.count : 0);
+    }
+
+    const style    = getComputedStyle(document.documentElement);
+    const accent   = style.getPropertyValue('--accent').trim();
+    const surface  = style.getPropertyValue('--surface-2').trim();
+    const textMuted = style.getPropertyValue('--text-muted').trim();
+
+    new Chart(document.getElementById('activityChart'), {
+        type: 'bar',
+        data: {
+            labels: days,
+            datasets: [{
+                data: counts,
+                backgroundColor: accent + '55',
+                borderColor: accent,
+                borderWidth: 2,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, color: textMuted },
+                    grid:  { color: surface }
+                },
+                x: {
+                    ticks: { color: textMuted, maxRotation: 0 },
+                    grid:  { display: false }
+                }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

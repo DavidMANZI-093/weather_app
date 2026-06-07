@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Search History{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+    <header class="admin-header">
+        <div>
+            <h2 class="admin-title">Search History</h2>
+            <p class="admin-subtitle">{{ total }} record{{ 's' if total != 1 else '' }} total</p>
+        </div>
+        <nav class="admin-tabs">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-tab">Overview</a>
+            <a href="{{ url_for('admin_searches') }}"  class="admin-tab active">Search history</a>
+        </nav>
+    </header>
+
+    {% if rows %}
+    <div class="toolbar">
+        <form method="POST" action="{{ url_for('clear_all_searches') }}"
+              onsubmit="return confirm('Delete all search records? This cannot be undone.')">
+            <button type="submit" class="btn btn--danger btn--sm clear-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <span class="clear-text">Clear all records</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Location</th>
+                <th>Method</th>
+                <th>Query</th>
+                <th>Temp</th>
+                <th>Condition</th>
+                <th>Humidity</th>
+                <th>Wind</th>
+                <th>IP</th>
+                <th>Searched at</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td class="muted">{{ row.id }}</td>
+                <td>{{ row.city_name or '—' }}{% if row.country %}, {{ row.country }}{% endif %}</td>
+                <td class="muted" style="text-transform: uppercase; font-size: 0.85em; font-weight: 600;">{{ 'CITY' if row.query_type == 'city' else 'CRDS' }}</td>
+                <td class="muted small">{{ row.query_input }}</td>
+                <td>{{ row.temperature }}&deg;C</td>
+                <td>{{ row.condition }}</td>
+                <td>{{ row.humidity }}%</td>
+                <td>{{ row.wind_speed }} km/h</td>
+                <td class="muted small">{{ row.ip_address or '—' }}</td>
+                <td class="time-cell muted">{{ row.searched_at[:16] }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_search', search_id=row.id) }}"
+                          onsubmit="return confirm('Delete this record?')">
+                        <button type="submit" class="btn-icon" title="Delete" aria-label="Delete record">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+    {% if pages > 1 %}
+    <nav class="pagination" aria-label="Pages">
+        {% if page > 1 %}
+        <a href="{{ url_for('admin_searches', page=page-1) }}" class="page-btn">&larr; Previous</a>
+        {% endif %}
+        <span class="page-info">Page {{ page }} of {{ pages }}</span>
+        {% if page < pages %}
+        <a href="{{ url_for('admin_searches', page=page+1) }}" class="page-btn">Next &rarr;</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <p class="empty-note">No searches recorded yet.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

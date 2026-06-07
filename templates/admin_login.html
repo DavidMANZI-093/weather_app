@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Admin Sign In{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    <div class="auth-card">
+        <h2 class="auth-title">Administrator</h2>
+        <p class="auth-subtitle">Sign in to access the dashboard.</p>
+
+        {% if error %}
+        <div class="alert alert--error" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('admin_login') }}" class="auth-form" novalidate>
+            <div class="input-group">
+                <label for="username" class="input-label">Username</label>
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    class="text-input"
+                    autocomplete="username"
+                    autofocus
+                    required
+                >
+            </div>
+            <div class="input-group">
+                <label for="password" class="input-label">Password</label>
+                <div class="password-wrap">
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        class="text-input"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button type="button" class="password-reveal" aria-label="Show password" data-target="password">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full">Sign in</button>
+        </form>
+
+        <p class="auth-hint">Default credentials: <code>admin</code> / <code>admin123</code></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.password-reveal').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    });
+});
+</script>
+{% endblock %}

@@ -1,4 +1,4 @@
-# Skies — Weather Information System
+# Skies — Weather App
 
 A Flask + SQLite weather python app for our HCI Course CAT.
 
@@ -38,6 +38,8 @@ Change the password via the dashboard after first login.
 ```
 weather_app/
 ├── app.py                  # All Flask routes and business logic
+├── README.md
+├── .env.example            # Environment variables
 ├── requirements.txt
 ├── instance/
 │   └── weather.db          # SQLite database (auto-created on first run)

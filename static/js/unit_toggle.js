@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function setUnit(unit) {
         if (currentUnit === unit) return;
         currentUnit = unit;
+        localStorage.setItem("weatherTempUnit", unit);
 
         if (unit === 'C') {
             btnCelsius.classList.add("active");
@@ -38,4 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     btnCelsius.addEventListener("click", () => setUnit('C'));
     btnFahrenheit.addEventListener("click", () => setUnit('F'));
+
+    const savedUnit = localStorage.getItem("weatherTempUnit");
+    if (savedUnit === 'F') {
+        currentUnit = ''; // force update
+        setUnit('F');
+    }
 });
